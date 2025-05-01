@@ -1,8 +1,22 @@
 import Link from "next/link"
+import {supabase} from "@/utils/supabase";
 
-export default function Categories() {
+export const dynamic = 'force-dynamic'; // Disable caching for this route
+
+export default async function Categories() {
+
+    const { data: categories } = await supabase.from('categories').select('*');
+
     return (
         <div>
+            <div>
+                <h1>FromDB Categories</h1>
+                <ul>
+                    {categories?.map(category =>
+                        <li key={category.id}>{category.name}</li>)}
+                </ul>
+
+            </div>
             <div className="dashboard-header">
                 <h1>All Categories</h1>
                 <div>

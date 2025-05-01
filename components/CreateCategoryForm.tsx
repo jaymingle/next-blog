@@ -25,17 +25,6 @@ const CreateCategoryForm = () => {
                     <textarea id="description" className="form-input" rows={4} placeholder="Category description"></textarea>
                 </div>
 
-                <div className="form-group">
-                    <label htmlFor="parent" className="form-label">
-                        Parent Category (Optional)
-                    </label>
-                    <select id="parent" className="form-input">
-                        <option value="">None</option>
-                        <option value="technology">Technology</option>
-                        <option value="design">Design</option>
-                    </select>
-                </div>
-
                 <button type="submit" className="btn btn-primary">
                     Create Category
                 </button>

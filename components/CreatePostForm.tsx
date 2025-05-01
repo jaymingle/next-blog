@@ -39,6 +39,13 @@ const CreatePostForm = () => {
                 </div>
 
                 <div className="form-group">
+                    <label htmlFor="add-image" className="form-label">
+                        Image URL
+                    </label>
+                    <input type="text" id="add-image" className="form-input" placeholder="Enter Image URL" />
+                </div>
+
+                <div className="form-group">
                     <label htmlFor="excerpt" className="form-label">
                         Excerpt
                     </label>
