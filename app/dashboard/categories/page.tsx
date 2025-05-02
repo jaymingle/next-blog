@@ -7,6 +7,11 @@ export default async function Categories() {
 
     const { data: categories } = await supabase.from('categories').select('*');
 
+    const formatTimeSettings = timestamp => {
+        const date = new Date(timestamp);
+        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+
     return (
         <div>
             <div>
@@ -45,34 +50,20 @@ export default async function Categories() {
                     <th>Name</th>
                     <th>Slug</th>
                     <th>Description</th>
-                    <th>Posts</th>
                     <th>Created</th>
                     <th>Actions</th>
                 </tr>
                 </thead>
                 <tbody>
-                {[
-                    {
-                        name: "Web Development",
-                        slug: "web-development",
-                        desc: "Articles about web development technologies and practices",
-                        posts: 12,
-                    },
-                    { name: "Design", slug: "design", desc: "UI/UX design principles and trends", posts: 8 },
-                    { name: "Technology", slug: "technology", desc: "Latest technology news and updates", posts: 15 },
-                    { name: "Programming", slug: "programming", desc: "Programming languages and techniques", posts: 10 },
-                    { name: "Career", slug: "career", desc: "Career advice for developers and designers", posts: 6 },
-                    { name: "Tools", slug: "tools", desc: "Software tools and resources", posts: 9 },
-                ].map((category, i) => (
-                    <tr key={i}>
+                {categories.map((category, id) => (
+                    <tr key={category.id}>
                         <td>{category.name}</td>
                         <td>{category.slug}</td>
-                        <td>{category.desc}</td>
-                        <td>{category.posts}</td>
-                        <td>April {i + 1}, 2023</td>
+                        <td>{category.description}</td>
+                        <td>{formatTimeSettings(category.created_at)}</td>
                         <td>
                             <div className="actions">
-                                <Link href={`/dashboard/categories/edit/${i + 1}`} className="icon-btn edit-icon">
+                                <Link href={`/dashboard/categories/edit/${id + 1}`} className="icon-btn edit-icon">
                                     ✏️
                                 </Link>
                                 <button className="icon-btn delete-icon">🗑️</button>
