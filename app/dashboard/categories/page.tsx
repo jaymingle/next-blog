@@ -14,14 +14,6 @@ export default async function Categories() {
 
     return (
         <div>
-            <div>
-                <h1>FromDB Categories</h1>
-                <ul>
-                    {categories?.map(category =>
-                        <li key={category.id}>{category.name}</li>)}
-                </ul>
-
-            </div>
             <div className="dashboard-header">
                 <h1>All Categories</h1>
                 <div>
