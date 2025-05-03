@@ -36,22 +36,42 @@ const EditCategoryForm = ({categoryID}:{categoryID:string}) => {
 
     }, [categoryID])
 
+    const handleChange = (e) => {
+        const {id, value} = e.target;
+        setCategoryData(prevState => ({
+            ...prevState,
+            [id]: value
+        }))
+    }
+
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        const {data, error} = await supabase.from('categories').update(categoryData).eq('id', categoryID);
+
+        if(error){
+            throw error;
+        }
+
+        alert('Category Updated Succesfully!')
+    }
+
     return (
         <div>
-            <h3>Forms ID: {categoryID}</h3>
-            <form className="form" style={{ maxWidth: "600px" }}>
+            <form className="form" style={{ maxWidth: "600px" }} onSubmit={handleSubmit}>
                 <div className="form-group">
                     <label htmlFor="name" className="form-label">
                         Name
                     </label>
-                    <input type="text" id="name" value={categoryData.name} className="form-input" defaultValue="Web Development" />
+                    <input type="text" id="name" value={categoryData.name} onChange={handleChange} className="form-input" />
                 </div>
 
                 <div className="form-group">
                     <label htmlFor="slug" className="form-label">
                         Slug
                     </label>
-                    <input type="text" id="slug" value={categoryData.slug} className="form-input" defaultValue="web-development" />
+                    <input type="text" id="slug" value={categoryData.slug} onChange={handleChange} className="form-input"/>
                 </div>
 
                 <div className="form-group">
@@ -63,7 +83,7 @@ const EditCategoryForm = ({categoryID}:{categoryID:string}) => {
                         className="form-input"
                         rows={4}
                         value={categoryData.description}
-                        defaultValue="Articles about web development technologies and practices"
+                        onChange={handleChange}
                     ></textarea>
                 </div>
 

@@ -1,6 +1,10 @@
 import Link from "next/link"
+import {supabase} from "@/utils/supabase";
 
 export default function Page() {
+
+    const {data : posts} = supabase.from('posts').select('*');
+
     return (
         <div>
             <div className="dashboard-header">

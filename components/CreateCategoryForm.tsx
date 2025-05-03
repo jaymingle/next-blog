@@ -25,9 +25,7 @@ const CreateCategoryForm = () => {
 
         if(error){
             throw error;
-        }
-
-        if (data){
+        }else{
             setCategoryData({
                 name: '',
                 slug: '',
