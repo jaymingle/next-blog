@@ -1,9 +1,18 @@
 import Link from "next/link"
 import {supabase} from "@/utils/supabase";
 
-export default function Page() {
+export default async function Page() {
 
-    const {data : posts} = supabase.from('posts').select('*');
+    const {data : posts} = await supabase.from('posts').select('*');
+
+    const formatTimeSettings = timestamp => {
+        const date = new Date(timestamp);
+        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+
+    //sports
+    //politics
+    //Cuisines
 
     return (
         <div>
@@ -35,6 +44,7 @@ export default function Page() {
                 </div>
             </div>
 
+            {/*<h1>Display Posts</h1>*/}
             <table className="table">
                 <thead>
                 <tr>
@@ -47,28 +57,28 @@ export default function Page() {
                 </tr>
                 </thead>
                 <tbody>
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
-                    <tr key={i}>
-                        <td>The Complete Guide to Modern Web Development</td>
-                        <td>Web Development</td>
+                {posts.map((post) => (
+                    <tr key={post.id}>
+                        <td>{post.title}</td>
+                        <td>{post.category}</td>
                         <td>
                 <span
                     style={{
                         padding: "0.25rem 0.5rem",
                         borderRadius: "var(--radius)",
-                        backgroundColor: i % 3 === 0 ? "#f59e0b" : "var(--secondary)",
+                        backgroundColor: post.status === "Draft" ? "#f59e0b" : "var(--secondary)",
                         color: "white",
                         fontSize: "0.75rem",
                     }}
                 >
-                  {i % 3 === 0 ? "Draft" : "Published"}
+                  {post.status}
                 </span>
                         </td>
-                        <td>April {i + 1}, 2023</td>
+                        <td>{formatTimeSettings(post.created_at)}</td>
                         <td>{Math.floor(Math.random() * 1000) + 100}</td>
                         <td>
                             <div className="actions">
-                                <Link href={`/dashboard/posts/edit/${i}`} className="icon-btn edit-icon">
+                                <Link href={`/dashboard/posts/edit/${post.id}`} className="icon-btn edit-icon">
                                     ✏️
                                 </Link>
                                 <button className="icon-btn delete-icon">🗑️</button>
