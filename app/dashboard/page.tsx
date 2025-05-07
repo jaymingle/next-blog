@@ -1,6 +1,95 @@
-import Link from "next/link"
+'use client';
+
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { supabase } from "@/utils/supabase";
 
 export default function Dashboard() {
+    const [stats, setStats] = useState({
+        totalPosts: 0,
+        totalCategories: 0,
+        totalViews: 0
+    });
+    const [recentPosts, setRecentPosts] = useState([]);
+    const [recentCategories, setRecentCategories] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function fetchDashboardData() {
+            try {
+                setLoading(true);
+
+                // Fetch post count
+                const { count: postCount, error: postError } = await supabase
+                    .from('posts')
+                    .select('*', { count: 'exact', head: true });
+
+                if (postError) throw postError;
+
+                // Fetch category count
+                const { count: categoryCount, error: categoryError } = await supabase
+                    .from('categories')
+                    .select('*', { count: 'exact', head: true });
+
+                if (categoryError) throw categoryError;
+
+                // Fetch 5 most recent posts
+                const { data: posts, error: recentPostsError } = await supabase
+                    .from('posts')
+                    .select(`
+                        *,
+                        categories(name)
+                    `)
+                    .order('created_at', { ascending: false })
+                    .limit(5);
+
+                if (recentPostsError) throw recentPostsError;
+
+                // Fetch 3 most recent categories
+                const { data: categories, error: recentCategoriesError } = await supabase
+                    .from('categories')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(3);
+
+                if (recentCategoriesError) throw recentCategoriesError;
+
+                // Calculate total views (you might want to store this in the database later)
+                const totalViews = posts.reduce((sum, post) => sum + (post.views || 0), 0);
+
+                // Set all the state values
+                setStats({
+                    totalPosts: postCount || 0,
+                    totalCategories: categoryCount || 0,
+                    totalViews: totalViews || 0
+                });
+
+                setRecentPosts(posts || []);
+                setRecentCategories(categories || []);
+            } catch (error) {
+                console.error("Error fetching dashboard data:", error);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        fetchDashboardData();
+    }, []);
+
+    const formatTimeSettings = timestamp => {
+        if (!timestamp) return 'N/A';
+        const date = new Date(timestamp);
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    };
+
+    if (loading) {
+        return <div>Loading dashboard data...</div>;
+    }
+
     return (
         <div>
             <div className="dashboard-header">
@@ -15,93 +104,117 @@ export default function Dashboard() {
             <div className="grid grid-3" style={{ marginBottom: "2rem" }}>
                 <div style={{ padding: "1.5rem", backgroundColor: "var(--muted)", borderRadius: "var(--radius)" }}>
                     <h3>Total Posts</h3>
-                    <p style={{ fontSize: "2rem", fontWeight: "bold" }}>24</p>
+                    <p style={{ fontSize: "2rem", fontWeight: "bold" }}>{stats.totalPosts}</p>
                 </div>
                 <div style={{ padding: "1.5rem", backgroundColor: "var(--muted)", borderRadius: "var(--radius)" }}>
                     <h3>Total Categories</h3>
-                    <p style={{ fontSize: "2rem", fontWeight: "bold" }}>8</p>
+                    <p style={{ fontSize: "2rem", fontWeight: "bold" }}>{stats.totalCategories}</p>
                 </div>
                 <div style={{ padding: "1.5rem", backgroundColor: "var(--muted)", borderRadius: "var(--radius)" }}>
                     <h3>Total Views</h3>
-                    <p style={{ fontSize: "2rem", fontWeight: "bold" }}>12.5K</p>
+                    <p style={{ fontSize: "2rem", fontWeight: "bold" }}>
+                        {stats.totalViews > 1000
+                            ? `${(stats.totalViews / 1000).toFixed(1)}K`
+                            : stats.totalViews}
+                    </p>
                 </div>
             </div>
 
             <div style={{ marginBottom: "2rem" }}>
                 <h2>Recent Posts</h2>
-                <table className="table">
-                    <thead>
-                    <tr>
-                        <th>Title</th>
-                        <th>Category</th>
-                        <th>Date</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {[1, 2, 3, 4, 5].map((i) => (
-                        <tr key={i}>
-                            <td>The Complete Guide to Modern Web Development</td>
-                            <td>Web Development</td>
-                            <td>April 11, 2023</td>
-                            <td>
-                  <span
-                      style={{
-                          padding: "0.25rem 0.5rem",
-                          borderRadius: "var(--radius)",
-                          backgroundColor: "var(--secondary)",
-                          color: "white",
-                          fontSize: "0.75rem",
-                      }}
-                  >
-                    Published
-                  </span>
-                            </td>
-                            <td>
-                                <div className="actions">
-                                    <Link href={`/dashboard/posts/edit/${i}`} className="icon-btn edit-icon">
-                                        ✏️
-                                    </Link>
-                                    <button className="icon-btn delete-icon">🗑️</button>
-                                </div>
-                            </td>
+                {recentPosts.length === 0 ? (
+                    <p>No posts found. Create your first post!</p>
+                ) : (
+                    <table className="table">
+                        <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Category</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
                         </tr>
-                    ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                        {recentPosts.map((post) => (
+                            <tr key={post.id}>
+                                <td>{post.title}</td>
+                                <td>{post.categories ? post.categories.name : 'Uncategorized'}</td>
+                                <td>{formatTimeSettings(post.created_at)}</td>
+                                <td>
+                                    <span
+                                        style={{
+                                            padding: "0.25rem 0.5rem",
+                                            borderRadius: "var(--radius)",
+                                            backgroundColor: post.status?.toLowerCase() === "draft"
+                                                ? "#f59e0b" // Yellow for drafts
+                                                : "#10b981", // Green for published
+                                            color: "white",
+                                            fontSize: "0.75rem",
+                                        }}
+                                    >
+                                        {post.status || 'Unknown'}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div className="actions">
+                                        <Link href={`/dashboard/posts/edit/${post.id}`} className="icon-btn edit-icon">
+                                            ✏️
+                                        </Link>
+                                        <button className="icon-btn delete-icon">🗑️</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                        </tbody>
+                    </table>
+                )}
+                <div style={{ marginTop: "1rem" }}>
+                    <Link href="/dashboard/posts" className="btn btn-outline">
+                        View All Posts
+                    </Link>
+                </div>
             </div>
 
             <div>
                 <h2>Recent Categories</h2>
-                <table className="table">
-                    <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Posts</th>
-                        <th>Created</th>
-                        <th>Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {[1, 2, 3].map((i) => (
-                        <tr key={i}>
-                            <td>Web Development</td>
-                            <td>12</td>
-                            <td>April 5, 2023</td>
-                            <td>
-                                <div className="actions">
-                                    <Link href={`/dashboard/categories/edit/${i}`} className="icon-btn edit-icon">
-                                        ✏️
-                                    </Link>
-                                    <button className="icon-btn delete-icon">🗑️</button>
-                                </div>
-                            </td>
+                {recentCategories.length === 0 ? (
+                    <p>No categories found. Create your first category!</p>
+                ) : (
+                    <table className="table">
+                        <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Created</th>
+                            <th>Actions</th>
                         </tr>
-                    ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                        {recentCategories.map((category) => (
+                            <tr key={category.id}>
+                                <td>{category.name}</td>
+                                <td>{category.description || 'No description'}</td>
+                                <td>{formatTimeSettings(category.created_at)}</td>
+                                <td>
+                                    <div className="actions">
+                                        <Link href={`/dashboard/categories/edit/${category.id}`} className="icon-btn edit-icon">
+                                            ✏️
+                                        </Link>
+                                        <button className="icon-btn delete-icon">🗑️</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                        </tbody>
+                    </table>
+                )}
+                <div style={{ marginTop: "1rem" }}>
+                    <Link href="/dashboard/categories" className="btn btn-outline">
+                        View All Categories
+                    </Link>
+                </div>
             </div>
         </div>
-    )
+    );
 }
