@@ -1,13 +1,13 @@
 import EditPostForm from "@/components/EditPostForm";
 
-export default function EditPost({ params }: { params: { id: string } }) {
+export default function EditPost({ params }: { params: { slug: string } }) {
     return (
         <div>
             <div className="dashboard-header">
-                <h1>Edit Post</h1>
+                <h1>Edit Post Ghana</h1>
             </div>
 
-            <EditPostForm/>
+            <EditPostForm postID={params.slug}/>
         </div>
     )
 }

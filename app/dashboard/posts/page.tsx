@@ -10,9 +10,6 @@ export default async function Page() {
         return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     }
 
-    //sports
-    //politics
-    //Cuisines
 
     return (
         <div>
